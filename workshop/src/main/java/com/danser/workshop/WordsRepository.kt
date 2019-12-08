@@ -11,4 +11,5 @@ interface IWordsRepository {
 class WordsRepository(private val resources: Resources) : IWordsRepository {
     override fun loadWords(): Single<List<Word>> = Single
         .fromCallable { resources.getStringArray(R.array.common_words).map { Word(it) } }
+        .cache()
 }

@@ -1,15 +1,23 @@
 package com.danser.workshop
 
-import androidx.appcompat.app.AppCompatActivity
+import android.graphics.Typeface
 import android.os.Bundle
+import android.text.Editable
+import android.text.SpannableStringBuilder
+import android.text.Spanned.SPAN_INCLUSIVE_INCLUSIVE
+import android.text.TextWatcher
+import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.item_word.view.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,6 +31,18 @@ class MainActivity : AppCompatActivity() {
 
         rvList.adapter = adapter
         rvList.layoutManager = LinearLayoutManager(this@MainActivity)
+
+        etFilter.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(p0: Editable?) {
+                presenter.onFilterTextChanged(p0?.toString() ?: "")
+            }
+
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            }
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            }
+        })
 
         subscribeToViewModels()
     }
@@ -42,6 +62,7 @@ class MainActivity : AppCompatActivity() {
             viewModelDisposable = presenter
                 .observeViewModels()
                 .distinctUntilChanged()
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { update(it) }
         }
     }
@@ -58,7 +79,9 @@ class MainActivity : AppCompatActivity() {
 
         vError.text = if (model.state is MainViewModel.State.Error) model.state.text else ""
 
-        etFilter.setText(model.filter)
+        if (etFilter.text.toString() != model.filter) {
+            etFilter.setText(model.filter)
+        }
         adapter.swapData(model.items)
     }
 
@@ -89,8 +112,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     class WordItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val boldSpan = StyleSpan(Typeface.BOLD)
         fun update(item: MainViewModel.WordItem) = with(itemView) {
-            tvText.text = item.text
+            if (item.selection != null) {
+                tvText.text = SpannableStringBuilder(item.text).apply {
+                    setSpan(boldSpan, 0, item.selection.length, SPAN_INCLUSIVE_INCLUSIVE)
+                }
+            } else {
+                tvText.text = item.text
+            }
         }
     }
 }

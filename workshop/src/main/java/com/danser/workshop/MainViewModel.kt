@@ -13,5 +13,5 @@ data class MainViewModel(
         object Empty : State()
     }
 
-    data class WordItem(val text: String, val selection: String)
+    data class WordItem(val text: String, val selection: String?)
 }
