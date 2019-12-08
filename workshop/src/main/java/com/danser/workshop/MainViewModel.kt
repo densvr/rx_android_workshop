@@ -1,10 +1,5 @@
 package com.danser.workshop
 
-
-interface MainView {
-    fun update(model: MainViewModel)
-}
-
 data class MainViewModel(
     val state: State,
     val filter: String,

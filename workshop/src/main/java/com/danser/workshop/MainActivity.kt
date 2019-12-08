@@ -7,12 +7,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.item_word.view.*
 
-class MainActivity : AppCompatActivity(), MainView {
+class MainActivity : AppCompatActivity() {
 
     private val adapter = Adapter()
+    private val presenter = MainApplication.MAIN_COMPONENT.mainPresenter
+    private var viewModelDisposable: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,9 +23,34 @@ class MainActivity : AppCompatActivity(), MainView {
 
         rvList.adapter = adapter
         rvList.layoutManager = LinearLayoutManager(this@MainActivity)
+
+        subscribeToViewModels()
     }
 
-    override fun update(model: MainViewModel) {
+    override fun onStart() {
+        super.onStart()
+        subscribeToViewModels()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unsubscribeFromViewModels()
+    }
+
+    private fun subscribeToViewModels() {
+        if (viewModelDisposable == null) {
+            viewModelDisposable = presenter
+                .observeViewModels()
+                .distinctUntilChanged()
+                .subscribe { update(it) }
+        }
+    }
+
+    private fun unsubscribeFromViewModels() {
+        viewModelDisposable?.dispose()
+    }
+
+    private fun update(model: MainViewModel) {
         vLoading.visibility(model.state is MainViewModel.State.Loading)
         vError.visibility(model.state is MainViewModel.State.Error)
         rvList.visibility(model.state is MainViewModel.State.Content)

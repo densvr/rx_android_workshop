@@ -1,27 +1,14 @@
 package com.danser.workshop
 
 import android.content.res.Resources
-import io.reactivex.Completable
-import io.reactivex.Observable
-import io.reactivex.subjects.BehaviorSubject
+import io.reactivex.Single
 
 
 interface IWordsRepository {
-    fun loadWords(): Completable
-    fun observeWords(): Observable<List<Word>>
+    fun loadWords(): Single<List<Word>>
 }
 
-class WordsRepository(resources: Resources): IWordsRepository {
-
-    private val wordsSubject = BehaviorSubject.create<List<Word>>()
-
-    override fun loadWords(): Completable {
-
-    }
-
-    override fun observeWords(): Observable<List<Word>> {
-
-    }
-
-
+class WordsRepository(private val resources: Resources) : IWordsRepository {
+    override fun loadWords(): Single<List<Word>> = Single
+        .fromCallable { resources.getStringArray(R.array.common_words).map { Word(it) } }
 }
